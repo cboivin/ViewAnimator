@@ -9,4 +9,5 @@ import Foundation
 
 struct ViewAnimatorConstants {
     static var preTransformKey = "kViewAnimatorPreTransformKey"
+	static var postTransformKey = "kViewAnimatorPostTransformKey"
 }

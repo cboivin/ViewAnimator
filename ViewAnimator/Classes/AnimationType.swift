@@ -14,7 +14,11 @@ import Foundation
 public enum AnimationType: Animation {
 
     case from(direction: Direction, offset: CGFloat)
-    case zoom(scale: CGFloat)
+	case to(direction: Direction, offset: CGFloat)
+	@available(*, deprecated, message: "Use zoomFrom instead")
+	case zoom(scale: CGFloat)
+    case zoomFrom(scale: CGFloat)
+	case zoomTo(scale: CGFloat)
     case rotate(angle: CGFloat)
     
     /// Creates the corresponding CGAffineTransform for AnimationType.from.
@@ -24,12 +28,33 @@ public enum AnimationType: Animation {
             let sign = direction.sign
             if direction.isVertical { return CGAffineTransform(translationX: 0, y: offset * sign) }
             return CGAffineTransform(translationX: offset * sign, y: 0)
-        case .zoom(let scale):
-             return CGAffineTransform(scaleX: scale, y: scale)
+		case .to(_, _):
+			return CGAffineTransform.identity
+		case .zoom(let scale), .zoomFrom(let scale):
+			return CGAffineTransform(scaleX: scale, y: scale)
+		case .zoomTo(_):
+			return CGAffineTransform.identity
         case .rotate(let angle):
             return CGAffineTransform(rotationAngle: angle)
         }
     }
+	
+	public var finalTransform: CGAffineTransform {
+		switch self {
+		case .from(_, _):
+			return CGAffineTransform.identity
+		case .to(let direction, let offset):
+			let sign = direction.sign
+			if direction.isVertical { return CGAffineTransform(translationX: 0, y: offset * sign) }
+			return CGAffineTransform(translationX: offset * sign, y: 0)
+		case .zoom(_), .zoomFrom(_):
+			return CGAffineTransform.identity
+		case .zoomTo(let scale):
+			return CGAffineTransform(scaleX: scale, y: scale)
+		case .rotate(_):
+			return CGAffineTransform.identity
+		}
+	}
     
     /// Generates a random AnimationType.
     ///
@@ -41,7 +66,7 @@ public enum AnimationType: Animation {
                                       offset: ViewAnimatorConfig.offset)
         } else if index == 2 {
             let scale = Double.random(min: 0, max: ViewAnimatorConfig.maxZoomScale)
-            return AnimationType.zoom(scale: CGFloat(scale))
+            return AnimationType.zoomFrom(scale: CGFloat(scale))
         }
         let angle = CGFloat.random(min: -ViewAnimatorConfig.maxRotationAngle,
                                    max: ViewAnimatorConfig.maxRotationAngle)

@@ -9,4 +9,5 @@ import Foundation
 
 public protocol Animation {
     var initialTransform: CGAffineTransform { get }
+	var finalTransform: CGAffineTransform { get }
 }

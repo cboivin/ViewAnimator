@@ -26,6 +26,19 @@ public extension UIView {
                                      .OBJC_ASSOCIATION_RETAIN)
         }
     }
+	
+	var postTransform: CGAffineTransform? {
+		get {
+			return objc_getAssociatedObject(self,
+											&ViewAnimatorConstants.postTransformKey) as? CGAffineTransform
+		}
+		set {
+			objc_setAssociatedObject(self,
+									 &ViewAnimatorConstants.postTransformKey,
+									 newValue,
+									 .OBJC_ASSOCIATION_RETAIN)
+		}
+	}
 
     /// Performs the animation.
     ///
@@ -42,17 +55,20 @@ public extension UIView {
                         delay: Double = 0,
                         duration: TimeInterval = ViewAnimatorConfig.duration,
                         completion: CompletionBlock? = nil) {
-        
+		
+		postTransform = transform
+		
         // Apply transforms and alpha
         animations.forEach {
             preTransform = transform
             transform = transform.concatenating($0.initialTransform)
+			postTransform = postTransform?.concatenating($0.finalTransform)
         }
         alpha = initialAlpha
         
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
             UIView.animate(withDuration: duration, animations: { [weak self] in
-                self?.transform = self?.preTransform ?? CGAffineTransform.identity
+                self?.transform = self?.postTransform ?? self?.preTransform ?? CGAffineTransform.identity
                 self?.alpha = finalAlpha
                 }, completion: { _ in
                     completion?()
